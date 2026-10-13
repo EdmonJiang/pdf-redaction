@@ -1,0 +1,24 @@
+# 统一行尾
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.sh  text eol=lf
+
+# 二进制
+*.exe   binary
+*.ico   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.bmp   binary
+*.tif   binary
+*.tiff  binary
+*.o     binary
+*.res   binary
+*.a     binary
+
+# 语言统计
+*.c      linguist-language=C
+*.md     linguist-documentation

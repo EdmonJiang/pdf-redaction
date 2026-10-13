@@ -1,0 +1,29 @@
+# 构建产物 / Build artifacts
+*.exe
+*.o
+*.obj
+*.res
+*.a
+*.lib
+*.dll
+*.log
+
+# 第三方依赖 (单独获取, 见 README)
+mupdf/
+sumatrapdf/
+mupdf_build/
+mupdf_fonts/
+
+# 测试数据
+*.pdf
+!doc/*.pdf
+test_out.*
+tout.*
+
+# IDE / 编辑器
+.vscode/
+.idea/
+*.swp
+*~
+Thumbs.db
+desktop.ini
