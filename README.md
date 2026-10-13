@@ -5,8 +5,10 @@
 敏感信息，支持**撤销/重做**与**翻页**，最后导出为 `原名_打码.pdf`。
 界面风格与 [`pdf-watermark`](../pdf-watermark) 保持一致。
 
-> 状态：**实现方案（设计文档）阶段**，代码尚未开始编写。
+> 状态：**v1.0.0 已实现**，`build.bat` 构建 → `pdfredaction.exe`。
 > 完整技术方案见 [`DESIGN.md`](DESIGN.md)。
+
+![PDF 打码工具界面](ScreenShot.png)
 
 ---
 
@@ -33,39 +35,46 @@
 | 位图 | 32bpp top-down DIB，便于像素级马赛克与 alpha 合成 |
 | 导出 | `fz_new_document_writer("pdf")`，逐页展平为全页图像 |
 
-## 目录结构（规划）
+## 目录结构
 
 ```
 pdf-redaction/
-├── DESIGN.md            ← 详细实现方案（先看这个）
+├── DESIGN.md            ← 详细实现方案
 ├── README.md
 ├── src/
-│   ├── main.c           框架窗口 / 消息循环
-│   ├── ui.c / ui.h      控件布局与状态
+│   ├── main.c           框架窗口 / 消息循环 / 快捷键
+│   ├── app.h            全局状态 App
+│   ├── ui.c / ui.h      控件布局与状态、命令处理
 │   ├── canvas.c / .h    预览绘制 / 坐标 / 交互
-│   ├── redact.c / .h    打码操作 + 撤销重做
+│   ├── redact.c / .h    打码操作 + 撤销重做 + 像素合成
 │   ├── render_pool.c/.h 多线程渲染 + 瓦片 LRU
-│   └── pdf_doc.c / .h   MuPDF 封装（打开/渲染/导出）
+│   ├── pdf_doc.c / .h   MuPDF 封装（打开/渲染/导出）
+│   └── version.h        版本信息
+├── tests/               无界面自测 (导出/方向/线程池)
 ├── tools/build_mupdf.sh
 ├── build.bat  Makefile  app.rc  redaction.ico
+├── mupdf_fonts/         内置字体（运行时）
 └── docs/MUPDF_NOTES.md
 ```
 
-## 依赖
+## 构建
 
-复用 `pdf-watermark` 工作区已构建好的 MuPDF（构建方法见其 `tools/build_mupdf.sh`）：
+```bat
+build.bat
+```
+
+依赖复用 `pdf-watermark` 工作区已构建好的 MuPDF：
 
 ```
 ../pdf-watermark/sumatrapdf/ext/mupdf         # 头文件
 ../pdf-watermark/sumatrapdf/src/shared/mupdf  # noto_sumatra.c
 ../pdf-watermark/mupdf_build/libmupdf.a       # 静态库
-./mupdf_fonts/                                # 内置字体（运行时）
+./mupdf_fonts/                                # 内置字体（运行时，随 exe 部署）
 ```
 
 ## 后续
 
-按 `DESIGN.md` 第 15 节的里程碑 M1→M7 实现。完成后：
-`build.bat` → `pdfredaction.exe`。
+按 `DESIGN.md` 第 15 节的里程碑 M1→M7，已全部落地为 v1.0.0。
 
 ---
 

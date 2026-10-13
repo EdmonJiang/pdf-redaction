@@ -309,7 +309,10 @@ static int render_tile(Worker *w, const RenderReq *q, HBITMAP *out)
 - 单生产者（UI）+ 多消费者（工作线程），互斥量 + 信号量。
 - 请求带 `seq`；同一 (page,zoom,tile) 只保留最新请求，旧请求直接丢弃（
   `pool_is_stale`）。这样快速翻页/缩放时不会渲染一堆过期瓦片。
-- 可见瓦片高优先级，预取（相邻页、相邻瓦片）低优先级。
+- 所有请求的优先级相同；**不做额外预取**。
+  预取会放大工作集，一旦“可见 + 预取”超过 LRU 容量，就会出现
+  “渲染 → 淘汰 → 再请求”的死循环，长时间占满 CPU。若日后要加预取，
+  必须先限制其不超过 LRU 剩余容量，且不得淘汰当前可见瓦片。
 - 结果队列由 UI 线程在 `WM_TIMER`/自定义消息里取出，插入 LRU 并 `InvalidateRect`。
 
 ### 8.4 pixmap → DIB
@@ -443,8 +446,18 @@ static void rd_redo(RedactDoc *d) { if (d->applied < d->n) d->applied++; }
 
 ## 11. 保存为 PDF（展平导出）
 
-为保证「真遮盖」，采用**逐页展平**：把每页渲染成高分辨率位图 → 应用该页所有
-打码操作 → 作为整页图像写入新 PDF。原始文字/图像不会进入输出文件。
+为保证「真遮盖」，**只对被修改过的页**做展平：把该页渲染成高分辨率位图 →
+应用该页所有打码操作 → 作为整页图像写入新 PDF；被遮处的原始文字/图像不会
+进入输出文件。**未被修改的页**直接从源文档深拷贝（`pdf_graft_mapped_page`），
+保留原始矢量/字体/图像，既不重复编码，也不占用额外内存。
+
+> 实现要点（v1.0.0）：使用 `pdf_create_document` + `pdf_graft_mapped_page` +
+> `pdf_add_page`/`pdf_insert_page` + `pdf_save_document`，而非 `fz_document_writer`。
+> 后者会把所有页对象堆在内存里直到 `close`，500+ 页文档逐页展平会占用数 GB
+> （实测约 9 GB，改后仅 25 MB）；且本 MuPDF 构建不支持“字体替换”，
+> 对未嵌入字体的页用 `fz_run_page` 矢量拷贝会直接报错，故未修改页必须 graft。
+
+下例仅示**被修改页**的展平路径：
 
 ```c
 int pdfred_export(App *app, const wchar_t *outPath, float exportZoom)

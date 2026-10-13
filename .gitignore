@@ -7,6 +7,8 @@
 *.lib
 *.dll
 *.log
+*.zip
+dist/
 
 # 第三方依赖 (单独获取, 见 README)
 mupdf/
@@ -18,6 +20,7 @@ mupdf_fonts/
 *.pdf
 !doc/*.pdf
 test_out.*
+test_in.*
 tout.*
 
 # IDE / 编辑器
